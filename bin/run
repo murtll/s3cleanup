@@ -35,7 +35,8 @@ begin
   last_key = new.last.key unless new.empty?
 end while new.size > 0
 
+puts 'Delete buckets:'
 objects.reject{|a| a.key.match(re) }.each do |obj|
   puts obj.key
-#  s3.delete_object(bucket: bucket, key: obj.key)
+  s3.delete_object(bucket: bucket, key: obj.key)
 end
