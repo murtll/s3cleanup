@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+require 'bundler/setup'
+require 'tinybucket'
+require 'aws-sdk'
+require 'json'
+
+repos = JSON.parse ENV['REPOS']
+bucket = ENV['AWS_S3_BUCKET']
+
+Tinybucket.configure do |config|
+  config.oauth_token  = ENV['BITBUCKET_OAUTH_TOKEN']
+  config.oauth_secret = ENV['BITBUCKET_OAUTH_SECRET']
+end
+s3 = Aws::S3::Client.new
+
+Struct.new("Repo", :owner, :slug, :build)
+repos.map! do |item|
+  Struct::Repo.new *item.split('/')
+end
+
+save_hashes = []
+bitbucket = Tinybucket.new
+repos.each do |repo|
+  puts "Parse: #{repo.owner}/#{repo.slug}"
+  branches = bitbucket.repo(repo.owner, repo.slug).branches.collect
+  save_hashes += branches.map{ |b| "#{repo.build}/#{b.target['hash']}"}
+end
+re = Regexp.union(save_hashes)
+
+objects = []
+last_key = nil
+begin
+  new = s3.list_objects(bucket: bucket, marker: last_key).contents
+  objects += new
+  last_key = new.last.key unless new.empty?
+end while new.size > 0
+
+objects.reject{|a| a.key.match(re) }.each do |obj|
+  puts obj.key
+#  s3.delete_object(bucket: bucket, key: obj.key)
+end
