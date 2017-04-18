@@ -4,6 +4,7 @@ require 'tinybucket'
 require 'aws-sdk'
 require 'json'
 
+STDOUT.sync = true
 repos = JSON.parse ENV['REPOS']
 bucket = ENV['AWS_S3_BUCKET']
 
@@ -13,7 +14,7 @@ Tinybucket.configure do |config|
 end
 s3 = Aws::S3::Client.new
 
-Struct.new("Repo", :owner, :slug, :build)
+Struct.new("Repo", :owner, :slug)
 repos.map! do |item|
   Struct::Repo.new *item.split('/')
 end
@@ -23,7 +24,7 @@ bitbucket = Tinybucket.new
 repos.each do |repo|
   puts "Parse: #{repo.owner}/#{repo.slug}"
   branches = bitbucket.repo(repo.owner, repo.slug).branches.collect
-  save_hashes += branches.map{ |b| "#{repo.build}/#{b.target['hash']}"}
+  save_hashes += branches.map{ |b| "#{b.target['hash']}"}
 end
 re = Regexp.union(save_hashes)
 
