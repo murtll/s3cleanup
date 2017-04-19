@@ -25,7 +25,7 @@ repos.each do |repo|
   puts "Parse: #{repo.owner}/#{repo.slug}"
   begin
     branches = bitbucket.repo(repo.owner, repo.slug).branches.collect
-  rescue Tinybucket::Error::NotFound => e
+  rescue *[Tinybucket::Error::ServiceError, Tinybucket::Error::NotFound] => e
     puts e.message
     next
   end
