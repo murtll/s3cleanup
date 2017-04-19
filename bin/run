@@ -23,7 +23,12 @@ save_hashes = []
 bitbucket = Tinybucket.new
 repos.each do |repo|
   puts "Parse: #{repo.owner}/#{repo.slug}"
-  branches = bitbucket.repo(repo.owner, repo.slug).branches.collect
+  begin
+    branches = bitbucket.repo(repo.owner, repo.slug).branches.collect
+  rescue Tinybucket::Error::NotFound => e
+    puts e.message
+    next
+  end
   save_hashes += branches.map{ |b| "#{b.target['hash']}"}
 end
 re = Regexp.union(save_hashes)
