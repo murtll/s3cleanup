@@ -3,6 +3,7 @@ require 'bundler/setup'
 require 'tinybucket'
 require 'aws-sdk'
 require 'json'
+require 'elasticsearch'
 
 STDOUT.sync = true
 repos = JSON.parse ENV['REPOS']
@@ -31,7 +32,13 @@ repos.each do |repo|
   end
   save_hashes += branches.map{ |b| "#{b.target['hash']}"}
 end
-re = Regexp.union(save_hashes)
+
+# Parse ES
+ES = Elasticsearch::Client.new(host: ENV.fetch('ELK_URL', 'http://localhost:9200'))
+save_hashes += ES.search(index: 'capistrano', body: { query: { match: { stage: 'production' } } })['hits']['hits']
+                 .first['_source']['apps']
+                 .map { |_, v| v['current_revision'] }
+                 .reject( &:nil? )
 
 objects = []
 last_key = nil
@@ -42,7 +49,7 @@ begin
 end while new.size > 0
 
 puts 'Delete buckets:'
-objects.reject{|a| a.key.match(re) }.each do |obj|
+objects.reject{|a| a.key.match( Regexp.union(save_hashes) ) }.each do |obj|
   puts obj.key
   s3.delete_object(bucket: bucket, key: obj.key)
 end
