@@ -15,7 +15,7 @@ Tinybucket.configure do |config|
 end
 s3 = Aws::S3::Client.new
 
-Struct.new("Repo", :owner, :slug)
+Struct.new("Repo", :project, :owner, :slug)
 repos.map! do |item|
   Struct::Repo.new *item.split('/')
 end
@@ -49,7 +49,9 @@ begin
 end while new.size > 0
 
 puts 'Delete buckets:'
-objects.reject{|a| a.key.match( Regexp.union(save_hashes) ) }.each do |obj|
+objects.select{|a| a.key.match( Regexp.union( repos.map(&:project) ) ) }
+       .reject{|a| a.key.match( Regexp.union(save_hashes) ) }
+       .each do |obj|
   puts obj.key
   s3.delete_object(bucket: bucket, key: obj.key)
 end
