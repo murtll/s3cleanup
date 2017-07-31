@@ -30,16 +30,18 @@ repos.each do |repo|
     puts e.message
     next
   end
-  save_hashes += branches.map{ |b| "#{b.target['hash']}"}
+  save_hashes += branches.map{ |b| "#{repo.project}/#{b.target['hash']}.tar.gz"}
 end
 
 # Parse ES
 ES = Elasticsearch::Client.new(host: ENV.fetch('ELK_URL', 'http://localhost:9200'))
-save_hashes += ES.search(index: 'capistrano', body: { query: { match: { stage: 'production' } } })['hits']['hits']
-                 .first['_source']['apps']
-                 .map { |_, v| v['current_revision'] }
-                 .reject( &:nil? )
+ES.search(index: 'capistrano')['hits']['hits'].each do |document|
+  if (depl = document['_source']['apps_v2'])
+    save_hashes += depl.map{ |_, v| v.map{ |_, v| v['s3key'] }}.flatten.reject( &:nil? )
+  end
+end
 
+save_hashes.uniq!
 objects = []
 last_key = nil
 begin
