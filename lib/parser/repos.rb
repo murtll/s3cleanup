@@ -2,6 +2,27 @@ require 'git'
 require 'tinybucket'
 require 'yaml'
 
+def with_handler(&block)
+  tries ||= 3
+  yield
+rescue *[Tinybucket::Error::ServiceError, Tinybucket::Error::NotFound] => e
+  sleep 30
+  retry unless (tries -= 1).zero?
+  puts e.message
+end
+
+def list_branches(repo)
+  with_handler { repo.branches.collect }
+end
+
+def head_branch(branch)
+  with_handler { branch.commits.take(1).first }
+end
+
+def build_commit(commit)
+  with_handler { commit.build_statuses.collect.sort_by(&:updated_on).last }
+end
+
 def parse_repos
   Tinybucket.configure do |config|
     config.oauth_token  = ENV['BITBUCKET_OAUTH_TOKEN']
@@ -16,7 +37,7 @@ def parse_repos
     repo_result = []
     puts "Parse #{repo.repo_owner}/#{repo.repo_slug}..."
     list_branches(repo).each do |branch|
-      commit = head_branch(branch)
+      next unless commit = head_branch(branch)
       next unless build = build_commit(commit)
       build_name = build.url[/\/job\/([-\w]+)/,1]
       repo_result.push({

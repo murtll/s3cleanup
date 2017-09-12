@@ -20,8 +20,7 @@ begin
 end while new.size > 0
 
 puts 'Delete buckets:'
-objects.select{|a| a.key.match( Regexp.union( repos.map(&:project) ) ) }
-       .reject{|a| a.key.match( Regexp.union(save_hashes) ) }
+objects.reject{|a| a.key.match( Regexp.union(save_hashes) ) }
        .each do |obj|
   puts obj.key
   s3.delete_object(bucket: bucket, key: obj.key)
