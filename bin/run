@@ -1,72 +1,15 @@
 #!/usr/bin/env ruby
 require 'bundler/setup'
-require 'tinybucket'
-require 'aws-sdk'
-require 'json'
-require 'elasticsearch'
-require 'terminal-table'
+require 's3cleanup'
 
 STDOUT.sync = true
-repos = JSON.parse ENV['REPOS']
-bucket = ENV['AWS_S3_BUCKET']
 
-Tinybucket.configure do |config|
-  config.oauth_token  = ENV['BITBUCKET_OAUTH_TOKEN']
-  config.oauth_secret = ENV['BITBUCKET_OAUTH_SECRET']
-end
 s3 = Aws::S3::Client.new
 
-Struct.new("Repo", :project, :owner, :slug)
-repos.map! do |item|
-  Struct::Repo.new *item.split('/')
-end
+save_hashes = parse_repos
+save_hashes += parse_pinnings
 
-save_hashes = []
-table_result = []
-bitbucket = Tinybucket.new
-repos.each do |repo|
-  puts "Parse: #{repo.owner}/#{repo.slug}"
-  begin
-    branches = bitbucket.repo(repo.owner, repo.slug).branches.collect
-  rescue *[Tinybucket::Error::ServiceError, Tinybucket::Error::NotFound] => e
-    puts e.message
-    next
-  end
-  branches.each do |branch|
-    table_result.push ["#{repo.owner}/#{repo.slug}", branch.name, branch.target['hash']  ]
-    save_hashes.push "#{repo.project}/#{branch.target['hash']}.tar.gz"
-  end
-  save_hashes += branches.map{ |b| "#{repo.project}/#{b.target['hash']}.tar.gz"}
-end
-puts Terminal::Table.new(
-  title:    'Repo HEAD revisions',
-  headings: %w(repo branch revision),
-  rows:     table_result
-)
-
-table_result = []
-ES = Elasticsearch::Client.new(host: ENV.fetch('ELK_URL', 'http://localhost:9200'))
-document = ES.search index: 'capistrano', scroll: '1h'
-while result = ES.scroll(scroll_id: document['_scroll_id'], scroll: '5m') and not result['hits']['hits'].empty? do
-  result['hits']['hits'].each do |document|
-    if (depl = document['_source']['apps_v2'])
-      depl.each do |project, roles|
-        roles.each do |role, params|
-          unless params['s3key'].nil?
-            table_result.push [document['_source']['stage'], role, project, params['s3key']]
-            save_hashes.push params['s3key']
-          end
-        end
-      end
-    end
-  end
-end
-puts Terminal::Table.new(
-  title:    'Pinning versions',
-  headings: %w(stage role project revision),
-  rows:     table_result
-)
-
+bucket = ENV['AWS_S3_BUCKET']
 save_hashes.uniq!
 objects = []
 last_key = nil

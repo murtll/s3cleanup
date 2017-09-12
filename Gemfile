@@ -3,6 +3,9 @@
 source "https://rubygems.org"
 
 gem 'aws-sdk'
-gem 'terminal-table'
 gem 'elasticsearch'
+gem 'git', git: 'https://github.com/onetwotrip/ruby-git.git'
+gem 'terminal-table'
 gem 'tinybucket', github: 'hirakiuc/tinybucket'
+
+gemspec

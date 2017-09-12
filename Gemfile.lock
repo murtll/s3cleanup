@@ -10,6 +10,17 @@ GIT
       faraday_middleware (~> 0.10)
       simple_oauth (~> 0.3)
 
+GIT
+  remote: https://github.com/onetwotrip/ruby-git.git
+  revision: c4b480a757c3e2f971401acd919788a1ab25eb3f
+  specs:
+    git (1.2.9.1)
+
+PATH
+  remote: .
+  specs:
+    s3cleanup (0.1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -60,6 +71,8 @@ PLATFORMS
 DEPENDENCIES
   aws-sdk
   elasticsearch
+  git!
+  s3cleanup!
   terminal-table
   tinybucket!
 
