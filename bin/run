@@ -4,6 +4,7 @@ require 'tinybucket'
 require 'aws-sdk'
 require 'json'
 require 'elasticsearch'
+require 'terminal-table'
 
 STDOUT.sync = true
 repos = JSON.parse ENV['REPOS']
@@ -21,6 +22,7 @@ repos.map! do |item|
 end
 
 save_hashes = []
+table_result = []
 bitbucket = Tinybucket.new
 repos.each do |repo|
   puts "Parse: #{repo.owner}/#{repo.slug}"
@@ -30,16 +32,40 @@ repos.each do |repo|
     puts e.message
     next
   end
+  branches.each do |branch|
+    table_result.push ["#{repo.owner}/#{repo.slug}", branch.name, branch.target['hash']  ]
+    save_hashes.push "#{repo.project}/#{branch.target['hash']}.tar.gz"
+  end
   save_hashes += branches.map{ |b| "#{repo.project}/#{b.target['hash']}.tar.gz"}
 end
+puts Terminal::Table.new(
+  title:    'Repo HEAD revisions',
+  headings: %w(repo branch revision),
+  rows:     table_result
+)
 
-# Parse ES
+table_result = []
 ES = Elasticsearch::Client.new(host: ENV.fetch('ELK_URL', 'http://localhost:9200'))
-ES.search(index: 'capistrano')['hits']['hits'].each do |document|
-  if (depl = document['_source']['apps_v2'])
-    save_hashes += depl.map{ |_, v| v.map{ |_, v| v['s3key'] }}.flatten.reject( &:nil? )
+document = ES.search index: 'capistrano', scroll: '1h'
+while result = ES.scroll(scroll_id: document['_scroll_id'], scroll: '5m') and not result['hits']['hits'].empty? do
+  result['hits']['hits'].each do |document|
+    if (depl = document['_source']['apps_v2'])
+      depl.each do |project, roles|
+        roles.each do |role, params|
+          unless params['s3key'].nil?
+            table_result.push [document['_source']['stage'], role, project, params['s3key']]
+            save_hashes.push params['s3key']
+          end
+        end
+      end
+    end
   end
 end
+puts Terminal::Table.new(
+  title:    'Pinning versions',
+  headings: %w(stage role project revision),
+  rows:     table_result
+)
 
 save_hashes.uniq!
 objects = []
