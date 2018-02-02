@@ -48,5 +48,6 @@ def parse_repos
     print_table("HEAD revisions: #{repo.repo_owner}/#{repo.repo_slug}", repo_result)
     table_result += repo_result
   end
+
   table_result.map { |i| i[:s3key] }
 end

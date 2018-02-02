@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require 'bundler/setup'
 require 's3cleanup'
+require 'time_difference'
 
 STDOUT.sync = true
 
@@ -9,10 +10,17 @@ s3 = Aws::S3::Client.new
 save_hashes = parse_repos
 save_hashes += parse_pinnings
 
-bucket = ENV['AWS_S3_BUCKET']
+if ENV['EXCLUSIVE_FOLDERS']
+  exclusive_hash = ENV['EXCLUSIVE_FOLDERS'].split(',')
+  save_hashes    += exclusive_hash
+  exclusive_keep = ENV['EXCLUSIVE_KEEP'] || 6
+end
+
 save_hashes.uniq!
-objects = []
+bucket   = ENV['AWS_S3_BUCKET']
+objects  = []
 last_key = nil
+
 begin
   new = s3.list_objects(bucket: bucket, marker: last_key).contents
   objects += new
@@ -20,8 +28,20 @@ begin
 end while new.size > 0
 
 puts 'Delete buckets:'
-objects.reject{|a| a.key.match( Regexp.union(save_hashes) ) }
-       .each do |obj|
+objects.reject do |a|
+  a.key.match(Regexp.union(save_hashes))
+end.each do |obj|
   puts obj.key
   s3.delete_object(bucket: bucket, key: obj.key)
+end
+
+puts 'Delete exclusive buckets:'
+if exclusive_hash
+  objects.select do |a|
+    a.key.match(Regexp.union(exclusive_hash)) &&
+    TimeDifference.between(a.last_modified, Time.now).in_weeks > exclusive_keep
+  end.each do |obj|
+    puts obj.key
+    s3.delete_object(bucket: bucket, key: obj.key)
+  end
 end
