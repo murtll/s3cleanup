@@ -39,7 +39,7 @@ puts 'Delete exclusive buckets:'
 if exclusive_hash
   objects.select do |a|
     a.key.match(Regexp.union(exclusive_hash)) &&
-    TimeDifference.between(a.last_modified, Time.now).in_weeks > exclusive_keep
+    TimeDifference.between(a.last_modified, Time.now).in_weeks > exclusive_keep.to_f
   end.each do |obj|
     puts obj.key
     s3.delete_object(bucket: bucket, key: obj.key)
