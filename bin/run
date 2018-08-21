@@ -31,7 +31,7 @@ objects.reject do |a|
   TimeDifference.between(a.last_modified, Time.now).in_days < keep.to_f
 end.each do |obj|
   puts obj.key
-  # s3.delete_object(bucket: bucket, key: obj.key)
+  s3.delete_object(bucket: bucket, key: obj.key)
 end
 
 if exclusive_hash
@@ -42,6 +42,6 @@ if exclusive_hash
     TimeDifference.between(a.last_modified, Time.now).in_weeks > exclusive_keep.to_f
   end.each do |obj|
     puts obj.key
-    # s3.delete_object(bucket: bucket, key: obj.key)
+    s3.delete_object(bucket: bucket, key: obj.key)
   end
 end
