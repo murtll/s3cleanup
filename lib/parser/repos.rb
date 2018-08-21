@@ -1,3 +1,4 @@
+# DEPRECATED
 require 'git'
 require 'tinybucket'
 require 'yaml'

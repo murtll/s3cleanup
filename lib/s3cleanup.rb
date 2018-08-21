@@ -1,6 +1,6 @@
 require 'aws-sdk'
 require 'parser/pinnings'
-require 'parser/repos'
+# require 'parser/repos'
 require 'terminal-table'
 
 def print_table(title = "", data)

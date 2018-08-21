@@ -4,11 +4,8 @@ require 's3cleanup'
 require 'time_difference'
 
 STDOUT.sync = true
-
-s3 = Aws::S3::Client.new
-
-save_hashes = parse_repos
-save_hashes += parse_pinnings
+s3          = Aws::S3::Client.new
+save_hashes = parse_pinnings
 
 if ENV['EXCLUSIVE_FOLDERS']
   exclusive_hash = ENV['EXCLUSIVE_FOLDERS'].split(',')
@@ -18,30 +15,33 @@ end
 
 save_hashes.uniq!
 bucket   = ENV['AWS_S3_BUCKET']
+keep     = ENV['KEEP'] || 2
 objects  = []
 last_key = nil
 
 begin
-  new = s3.list_objects(bucket: bucket, marker: last_key).contents
-  objects += new
+  new      = s3.list_objects(bucket: bucket, marker: last_key).contents
+  objects  += new
   last_key = new.last.key unless new.empty?
 end while new.size > 0
 
-puts 'Delete buckets:'
+puts 'Delete artefacts:'
 objects.reject do |a|
-  a.key.match(Regexp.union(save_hashes))
+  a.key.match(Regexp.union(save_hashes)) ||
+  TimeDifference.between(a.last_modified, Time.now).in_days < keep.to_f
 end.each do |obj|
   puts obj.key
-  s3.delete_object(bucket: bucket, key: obj.key)
+  # s3.delete_object(bucket: bucket, key: obj.key)
 end
 
-puts 'Delete exclusive buckets:'
 if exclusive_hash
+  puts 'Delete exclusive artefacts:'
+
   objects.select do |a|
     a.key.match(Regexp.union(exclusive_hash)) &&
     TimeDifference.between(a.last_modified, Time.now).in_weeks > exclusive_keep.to_f
   end.each do |obj|
     puts obj.key
-    s3.delete_object(bucket: bucket, key: obj.key)
+    # s3.delete_object(bucket: bucket, key: obj.key)
   end
 end

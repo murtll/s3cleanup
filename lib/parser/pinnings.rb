@@ -2,11 +2,14 @@ require 'elasticsearch'
 
 def parse_pinnings
   table_result = []
-  es = Elasticsearch::Client.new(host: ENV.fetch('ELK_URL', 'http://localhost:9200'))
+  es           = Elasticsearch::Client.new(
+    host: ENV.fetch('ELK_URL', 'http://localhost:9200')
+  )
   document = es.search index: 'capistrano', scroll: '1h'
+
   while result = es.scroll(scroll_id: document['_scroll_id'], scroll: '5m') and not result['hits']['hits'].empty? do
-    result['hits']['hits'].each do |document|
-      next unless (depl = document['_source']['apps_v2'])
+    result['hits']['hits'].each do |doc|
+      next unless (depl = doc['_source']['apps_v2'])
       stage_result = []
       depl.each do |project, roles|
         roles.each do |role, params|
@@ -19,7 +22,7 @@ def parse_pinnings
           end
         end
       end
-      print_table("Pinning revisions: #{document['_source']['stage']}", stage_result)
+      print_table("Pinning revisions: #{doc['_source']['stage']}", stage_result)
       table_result += stage_result
     end
   end
