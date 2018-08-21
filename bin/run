@@ -4,6 +4,17 @@ require 's3cleanup'
 require 'time_difference'
 
 STDOUT.sync = true
+
+aws_config = {}
+
+aws_config[:endpoint]          = ENV['AWS_ENDPOINT']          if ENV['AWS_ENDPOINT']
+aws_config[:access_key_id]     = ENV['AWS_ACCESS_KEY_ID']     if ENV['AWS_ACCESS_KEY_ID']
+aws_config[:secret_access_key] = ENV['AWS_SECRET_ACCESS_KEY'] if ENV['AWS_SECRET_ACCESS_KEY']
+aws_config[:region]            = ENV['AWS_REGION']            if ENV['AWS_REGION']
+aws_config[:force_path_style]  = true  if ENV['AWS_FORCE_PATH_STYLE'] == 'true'
+
+Aws.config.update(aws_config)
+
 s3          = Aws::S3::Client.new
 save_hashes = parse_pinnings
 
