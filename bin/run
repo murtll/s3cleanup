@@ -26,7 +26,7 @@ end
 
 save_hashes.uniq!
 bucket   = ENV['AWS_S3_BUCKET']
-keep     = ENV['KEEP'] || 2
+keep     = ENV['KEEP'] || 3
 objects  = []
 last_key = nil
 
