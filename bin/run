@@ -47,6 +47,7 @@ objects.delete_if do |object|
     puts "master branch found at #{obj.key} skipping"
     true
   end
+end
 
 objects.reject do |a|
   a.key.match(Regexp.union(save_hashes)) ||
