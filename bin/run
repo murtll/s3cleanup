@@ -27,6 +27,8 @@ end
 save_hashes.uniq!
 bucket   = ENV['AWS_S3_BUCKET']
 keep     = ENV['KEEP'] || 3
+master_keep = ENV['MASTER_KEEP'] || 20
+
 objects  = []
 last_key = nil
 
@@ -37,6 +39,15 @@ begin
 end while new.size > 0
 
 puts 'Delete artefacts:'
+
+objects.delete_if do |object|
+  if object.metadata['x-amz-meta-branch'] = 'master' and 
+     TimeDifference.between(object.last_modified, Time.now).in_days < master_keep.to_f
+  then
+    puts "master branch found at #{obj.key} skipping"
+    true
+  end
+
 objects.reject do |a|
   a.key.match(Regexp.union(save_hashes)) ||
   TimeDifference.between(a.last_modified, Time.now).in_days < keep.to_f
