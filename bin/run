@@ -46,6 +46,7 @@ objects.reject do |a|
   TimeDifference.between(a.last_modified, Time.now).in_days < keep.to_f
 end.each do |obj|
   resp = s3.head_object({ bucket: bucket, key: obj.key })
+    puts resp.metadata.inspect
     if resp.metadata['x-amz-meta-branch'] == 'master' 
          puts "found master at #{obj.key}"
      end
