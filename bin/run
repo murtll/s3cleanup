@@ -40,13 +40,6 @@ end while new.size > 0
 
 puts 'Delete artefacts:'
 
-#debug
-objects.first(10).each do |obj|
-    resp = s3.head_object({ bucket: bucket, key: obj.key })
-    puts resp.to_h.inspect
-    puts "key #{obj.key} meta: #{resp.to_h[:metadata]['branch']}"
-end
-
 objects.reject do |a|
   a.key.match(Regexp.union(save_hashes)) ||
   TimeDifference.between(a.last_modified, Time.now).in_days < keep.to_f
@@ -59,18 +52,22 @@ end.each do |obj|
         puts "skipping #{obj.key} because it is master"
         next
     end
-  puts obj.key
+  puts "deleting #{obj.key}"
   s3.delete_object(bucket: bucket, key: obj.key)
 end
 
 if exclusive_hash
   puts 'Delete exclusive artefacts:'
-
   objects.select do |a|
     a.key.match(Regexp.union(exclusive_hash)) &&
     TimeDifference.between(a.last_modified, Time.now).in_weeks > exclusive_keep.to_f
   end.each do |obj|
-    puts obj.key
+    resp = s3.head_object({ bucket: bucket, key: obj.key })
+    if resp.to_h[:metadata]['branch'] == 'master' and TimeDifference.between(resp.last_modified, Time.now).in_days < master_keep.to_f
+        puts "skipping #{obj.key} because it is master"
+        next
+    end
+    puts "deleting exclusive #{obj.key}"
     s3.delete_object(bucket: bucket, key: obj.key)
   end
 end
