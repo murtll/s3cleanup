@@ -52,11 +52,10 @@ objects.reject do |a|
   TimeDifference.between(a.last_modified, Time.now).in_days < keep.to_f
 end.each do |obj|
   resp = s3.head_object({ bucket: bucket, key: obj.key })
-    puts resp.to_h.inspect
-    if resp.to_h['metadata']['x-amz-meta-branch'] == 'master' 
+    if resp.to_h[:metadata]['branch'] == 'master' 
          puts "found master at #{obj.key}"
      end
-    if resp.metadata['x-amz-meta-branch'] == 'master' and TimeDifference.between(resp.last_modified, Time.now).in_days < master_keep.to_f
+    if resp.to_h[:metadata]['branch'] == 'master' and TimeDifference.between(resp.last_modified, Time.now).in_days < master_keep.to_f
         puts "skipping #{obj.key} because it is master"
         next
     end
