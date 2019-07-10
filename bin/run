@@ -44,7 +44,7 @@ puts 'Delete artefacts:'
 objects.first(10).each do |obj|
     resp = s3.head_object({ bucket: bucket, key: obj.key })
     puts resp.to_h.inspect
-    puts "key #{obj.key} meta: #{resp.to_h['metadata']['x-amz-meta-branch']}"
+    puts "key #{obj.key} meta: #{resp.to_h[:metadata]['branch']}"
 end
 
 objects.reject do |a|
