@@ -40,19 +40,24 @@ end while new.size > 0
 
 puts 'Delete artefacts:'
 
-objects.delete_if do |object|
-  if object.metadata['x-amz-meta-branch'] = 'master' and 
-     TimeDifference.between(object.last_modified, Time.now).in_days < master_keep.to_f
-  then
-    puts "master branch found at #{obj.key} skipping"
-    true
-  end
-end
+#objects.delete_if do |object|
+#  if object.metadata['x-amz-meta-branch'] = 'master' and 
+#     TimeDifference.between(object.last_modified, Time.now).in_days < master_keep.to_f
+#  then
+#    puts "master branch found at #{obj.key} skipping"
+#    true
+#  end
+#end
 
 objects.reject do |a|
   a.key.match(Regexp.union(save_hashes)) ||
   TimeDifference.between(a.last_modified, Time.now).in_days < keep.to_f
 end.each do |obj|
+  resp = s3.head_object({ bucket: bucket, key: obj.key })
+    if resp.metadata['x-amz-meta-branch'] = 'master' and TimeDifference.between(resp.last_modified, Time.now).in_days < master_keep.to_f
+        puts "skipping #{obj.key} because it is master"
+        next
+    end
   puts obj.key
   s3.delete_object(bucket: bucket, key: obj.key)
 end
