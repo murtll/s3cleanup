@@ -2,13 +2,13 @@
 # A sample Gemfile
 source "https://rubygems.org"
 
-gem 'aws-sdk'
-gem 'elasticsearch'
-gem 'git', git: 'https://github.com/onetwotrip/ruby-git.git'
-gem 'terminal-table'
-gem 'tinybucket', github: 'hirakiuc/tinybucket'
-gem 'dotenv'
-gem 'awesome_print'
-gem 'time_difference'
+gem 'aws-sdk', '~> 3.0', '>= 3.0.1'
+gem 'elasticsearch', '~> 6.1'
+gem 'git', git: 'https://github.com/onetwotrip/ruby-git'
+gem 'terminal-table', '~> 1.8'
+gem 'tinybucket', git: 'https://github.com/hirakiuc/tinybucket', tag: 'v1.6.0'
+gem 'dotenv', '~> 2.5'
+gem 'awesome_print', '~> 1.8'
+gem 'time_difference', '~> 0.7.0'
 
 gemspec
