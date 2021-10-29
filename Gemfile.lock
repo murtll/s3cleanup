@@ -1,6 +1,7 @@
 GIT
-  remote: git://github.com/hirakiuc/tinybucket.git
-  revision: 1b86f9ee85139100c16233c27d6bf3cc70669689
+  remote: https://github.com/hirakiuc/tinybucket
+  revision: bb996cdcce990040cc4fbb3c86f8b17163f8b15d
+  tag: v1.6.0
   specs:
     tinybucket (1.6.0)
       activemodel (>= 4.1.6)
@@ -11,7 +12,7 @@ GIT
       simple_oauth (~> 0.3)
 
 GIT
-  remote: https://github.com/onetwotrip/ruby-git.git
+  remote: https://github.com/onetwotrip/ruby-git
   revision: c4b480a757c3e2f971401acd919788a1ab25eb3f
   specs:
     git (1.2.9.1)
@@ -635,7 +636,7 @@ GEM
       multipart-post (>= 1.2, < 3)
     faraday-http-cache (1.3.1)
       faraday (~> 0.8)
-    faraday_middleware (0.12.2)
+    faraday_middleware (0.14.0)
       faraday (>= 0.7.4, < 1.0)
     i18n (1.1.0)
       concurrent-ruby (~> 1.0)
@@ -657,15 +658,15 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  awesome_print
-  aws-sdk
-  dotenv
-  elasticsearch
+  awesome_print (~> 1.8)
+  aws-sdk (~> 3.0, >= 3.0.1)
+  dotenv (~> 2.5)
+  elasticsearch (~> 6.1)
   git!
   s3cleanup!
-  terminal-table
-  time_difference
+  terminal-table (~> 1.8)
+  time_difference (~> 0.7.0)
   tinybucket!
 
 BUNDLED WITH
-   1.16.1
+   2.2.30
