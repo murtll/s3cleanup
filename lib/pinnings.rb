@@ -1,6 +1,39 @@
 require 'elasticsearch'
+require 'diplomat'
 
 def parse_pinnings
+  source = ENV.fetch('PINNINGS_SOURCE', 'consul')
+  case source
+  when 'consul'
+    parse_pinnings_consul
+  when 'es'
+    parse_pinnings_es
+  end
+end
+
+def parse_pinnings_consul
+  table_result = []
+
+  Diplomat.configure do |config|
+    config.url = ENV.fetch('CONSUL_URL', 'http://localhost:8500')
+  end
+
+  stages = Diplomat::Kv.get('/', :keys => true)
+
+  stages.each do |stage|
+    result = JSON.parse(Diplomat::Kv.get(stage))
+    result['apps_v2'].each do |project, config|
+      config.each do |role, params|
+        unless params['s3key'].nil?
+          table_result.push(params['s3key'])
+        end
+      end
+    end
+  end
+  table_result
+end
+
+def parse_pinnings_es
   table_result = []
   es           = Elasticsearch::Client.new(
     host: ENV.fetch('ELK_URL', 'http://localhost:9200')
@@ -34,4 +67,3 @@ def parse_pinnings
   end
   table_result.map { |i| i[:s3key] }
 end
-

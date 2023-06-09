@@ -623,6 +623,10 @@ GEM
     aws-sigv2 (1.0.1)
     aws-sigv4 (1.0.3)
     concurrent-ruby (1.0.5)
+    deep_merge (1.2.2)
+    diplomat (2.4.4)
+      deep_merge (~> 1.0, >= 1.0.1)
+      faraday (>= 0.9, < 1.1.0)
     dotenv (2.5.0)
     elasticsearch (6.1.0)
       elasticsearch-api (= 6.1.0)
@@ -660,6 +664,7 @@ PLATFORMS
 DEPENDENCIES
   awesome_print (~> 1.8)
   aws-sdk (~> 3.0, >= 3.0.1)
+  diplomat (~> 2.4.4)
   dotenv (~> 2.5)
   elasticsearch (~> 6.1)
   git!
