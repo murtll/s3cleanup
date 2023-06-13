@@ -18,7 +18,7 @@ def parse_pinnings_consul
     config.url = ENV.fetch('CONSUL_URL', 'http://localhost:8500')
   end
 
-  stages = Diplomat::Kv.get('/', :keys => true)
+  stages = Diplomat::Kv.get('/', keys: true)
 
   stages.each do |stage|
     result = JSON.parse(Diplomat::Kv.get(stage))

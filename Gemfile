@@ -10,6 +10,6 @@ gem 'tinybucket', git: 'https://github.com/hirakiuc/tinybucket', tag: 'v1.6.0'
 gem 'dotenv', '~> 2.5'
 gem 'awesome_print', '~> 1.8'
 gem 'time_difference', '~> 0.7.0'
-gem 'diplomat', '~> 2.4.4'
+gem 'diplomat', '~> 2.4'
 
 gemspec
